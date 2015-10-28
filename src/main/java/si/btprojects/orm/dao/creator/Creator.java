@@ -21,9 +21,7 @@ import java.util.*;
 import static si.btprojects.orm.dao.creator.lib.Helpers.getTableMetaData;
 import static si.btprojects.orm.dao.creator.lib.Helpers.getTableMetaDataUpdate;
 
-/**
- * @author Razvoj
- */
+
 public class Creator {
 
 
