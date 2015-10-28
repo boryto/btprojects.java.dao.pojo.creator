@@ -1,0 +1,28 @@
+package $packageName;
+
+import java.io.Serializable;
+
+public class $className implements Serializable{
+
+    private static final long serialVersionUID=${classSerialUID}L;
+#foreach( $entry in $tableData )
+    private $entry.tip $entry.ime;
+#end
+
+    //getters
+#foreach( $entry in $tableData )
+    public $entry.tip get${entry.ImeFirstCap}(){
+	return this.$entry.ime;
+    }
+#end    
+
+    //setters
+#foreach( $entry in $tableData )
+    public void set${entry.ImeFirstCap}($entry.tip $entry.ime){
+        this.$entry.ime = $entry.ime;
+    }  
+#end    
+
+    
+
+}

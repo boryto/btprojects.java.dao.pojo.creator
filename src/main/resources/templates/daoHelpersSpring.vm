@@ -1,0 +1,152 @@
+package $packageName;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.ejb.EJB;
+import javax.annotation.Resource;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+import java.sql.SQLException;
+import javax.ejb.Stateless;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
+
+import $packageNameModel.$dbObjectName;
+
+
+@SuppressWarnings("unchecked")
+public class ${className} extends NamedParameterJdbcDaoSupport {
+
+public List<${dbObjectName}> get${dbObjectName}ById(Integer id) throws SQLException{
+
+    // sql
+    StringBuilder sbSql = new StringBuilder();
+   	sbSql.append("SELECT * FROM ${dbSchema}.${dbTable} WHERE ID_${dbTable} = :id${dbObjectName} ").append(newLine);
+	sbSql.append("ORDER BY ID_${dbTable} DESC ").append(newLine);
+	sbSql.append("fetch first row only").append(newLine);
+
+    //sql parameters
+    final Map<String, Object> sqlParameters = new HashMap<String, Object>(1);
+	sqlParameters.put("id${dbObjectName}", id);
+        
+    //input parameters logging
+	if (log.isDebugEnabled()) {
+		logInputParameters("get${dbObjectName}ById", sqlParameters);
+	}
+
+     try{
+    //init spring
+	NamedParameterJdbcOperations template = getNamedParameterJdbcTemplate();
+    log.debug("get${dbObjectName}ById select sql: " + sbSql.toString());
+	List<${dbObjectName}> ${dbObjectName}List = template.query(sbSql.toString(), sqlParameters,  new ${dbObjectName}RowMapper());
+
+	return ${dbObjectName}List;
+        } catch (Exception e) {
+	    throw new SQLException(e.getMessage());
+	}
+
+}
+
+public List<${dbObjectName}> get${dbObjectName}s() throws SQLException {
+
+     String sql = "SELECT * FROM ${dbSchema}.${dbTable} fetch first 100 rows only";
+        	
+        try{
+	//init spring template
+	JdbcOperations template = getJdbcTemplate();
+
+        log.debug("get${dbObjectName}ById select sql: " + sql);
+        @SuppressWarnings("unchecked")
+        List<${dbObjectName}> ${dbObjectName}List = template.query(sql, new ${dbObjectName}RowMapper(), guid);
+	return ${dbObjectName}List;
+        } catch (Exception e) {
+	    throw new SQLException(e.getMessage());
+	}
+
+}
+
+public ${dbObjectName} insert${dbObjectName}(${dbObjectName}  rec) throws SQLException {
+#set($test = "ID_$dbTable")
+        
+        try{
+    JdbcOperations seqTmp = getJdbcTemplate();
+    BigDecimal id = seqTmp.queryForObject("SELECT ${dbSchema}.${dbTable}_SEQ.nextval FROM DUAL", null, BigDecimal.class);
+	log.debug("Got id from sequence ${dbSchema}.${dbTable}_SEQ: " + id );
+	rec.setId${dbTableSmall}(id);
+
+        StringBuilder sbSql = new StringBuilder();
+	sbSql.append("Insert into ${dbSchema}.${dbTable} ").append(newLine); 
+	sbSql.append("(#foreach( $entry in $tableDataUpdate ) ${entry.dbImePolja} #if( $foreach.hasNext ),#end #end)"); 
+	sbSql.append("VALUES"); 
+	sbSql.append("(#foreach( $entry in $tableDataUpdate ):${entry.ImeFirstCap}#if( $foreach.hasNext ),#end #end)"); 
+	
+        final Map<String, Object> sqlParameters = new HashMap<String, Object>(1);
+#foreach( $entry in $tableDataUpdate )
+        sqlParameters.put("${entry.ImeFirstCap}",  ${entry.StatementUpdate});
+#end
+	
+        // logging input parameters
+	if (log.isDebugEnabled()) {
+		logInputParameters("get${dbObjectName}ById", sqlParameters);
+	}
+
+        log.debug("get${dbObjectName}ById insert sql: " + sbSql.toString());
+        
+        NamedParameterJdbcOperations template = getNamedParameterJdbcTemplate();
+        template.update(sbSql.toString(), sqlParameters);
+	
+        return rec;
+        } catch (Exception e) {
+	    throw new SQLException(e.getMessage());
+	}
+
+
+    }
+
+
+public ${dbObjectName} update${dbObjectName}(${dbObjectName} rec) throws SQLException {
+	StringBuilder sbSql = new StringBuilder();
+        sbSql.append("UPDATE ${dbSchema}.${dbTable} SET");
+        sbSql.append("#foreach( $entry in $tableDataUpdate ) #if($entry.dbImePolja != $test)${entry.dbImePolja} = :${entry.ImeFirstCap} #if( $foreach.hasNext ), #end#end#end ");
+        sbSql.append("WHERE ID_${dbTable} = :Id${dbTableSmall} ");
+
+        final Map<String, Object> sqlParameters = new HashMap<String, Object>(1);
+#foreach( $entry in $tableDataUpdate )
+        sqlParameters.put("${entry.ImeFirstCap}", ${entry.StatementUpdate});
+#end
+        
+        log.debug("get${dbObjectName}ById update sql: " + sbSql.toString());
+        // logging input params
+	if (log.isDebugEnabled()) {
+		logInputParameters("get${dbObjectName}ById", sqlParameters);
+	}
+
+        try{
+        NamedParameterJdbcOperations template = getNamedParameterJdbcTemplate();
+        
+        template.update(sbSql.toString(), sqlParameters);
+	return rec;
+        } catch (Exception e) {
+	    throw new SQLException(e.getMessage());
+	}
+
+    }
+
+private void logInputParameters(String title, final Map<String, Object> sqlParameters) {
+	log.debug(title);
+	for (String key : sqlParameters.keySet()) {
+		log.debug("{}: '{}'", key, sqlParameters.get(key));
+	}
+}
+
+}
+

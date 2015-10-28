@@ -1,0 +1,21 @@
+package $packageName;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+
+import org.springframework.jdbc.core.RowMapper;
+
+import $packageNameModel.${dbObjectName};
+
+public class ${className} implements RowMapper{
+
+	@Override
+	public ${dbObjectName} mapRow(ResultSet rs, int rowNum) throws SQLException {
+		${dbObjectName} obj = new ${dbObjectName}();
+#foreach( $entry in $tableData )
+                obj.set${entry.ImeFirstCap}(rs.${entry.jdbcGetTipOriginal}("${entry.dbImePolja}"));
+#end
+        return obj;
+	}
+}

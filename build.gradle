@@ -1,0 +1,33 @@
+group 'BtProjects.ORM'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'application'
+mainClassName = "si.btprojects.orm.dao.creator.Creator"
+
+sourceCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    runtime files('C:/Oracle/instantclient_12_1/ojdbc6.jar', 'ojdbc6.jar') /*set path to jdbc Driver" */
+    compile 'org.apache.logging.log4j:log4j-core:2.4.1'
+    compile 'org.apache.velocity:velocity:1.7'
+    compile 'org.apache.velocity:velocity-tools:2.0'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+/*
+ *  Types that can be created:
+ *
+ *  jdbcEjb - create DAO objects and jdbc Ejb helpers
+ *  ClRmOnly - create DAO objects and spring Row mappers
+ *  spring - create DAO objects, spring row mappers and spring helepers
+ */
+
+run{
+    args 'jdbc:oracle:thin:@myoracle:1521/sid', 'username', 'password', 'schema', 'table1;table2', 'models.package', 'heplers.package', 'spring'
+}

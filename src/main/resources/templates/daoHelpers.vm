@@ -1,0 +1,190 @@
+package $packageName;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Resource;
+import javax.sql.DataSource;
+import javax.ejb.Stateless;
+import javax.ejb.EJB;
+import org.apache.log4j.Logger;
+import $packageNameModel.$dbObjectName;
+
+@Stateless
+public class ${className}{
+
+private Logger log = Logger.getLogger(this.getClass());
+
+@Resource(name="jdbc/appDs")
+private DataSource dataSource;
+
+public List<${dbObjectName}> get${dbObjectName}ById(Integer id) throws Exception{
+
+	StringBuilder sb = new StringBuilder();
+	sb.append("SELECT * FROM ${dbSchema}.${dbTable} WHERE ID_DOKUMENT = ? ");
+	sb.append("ORDER BY ID_DOKUMENT DESC ");
+	sb.append("fetch first row only");
+	return getData${dbObjectName}SqlById(sb.toString(), id);
+
+
+}
+
+private List<${dbObjectName}> getData${dbObjectName}SqlById(String sql, Integer id) throws SQLException{
+
+        List<${dbObjectName}> list = new ArrayList<${dbObjectName}>();
+        
+        Connection conn = dataSource.getConnection(null, null);
+        try {
+            PreparedStatement prepStmnt = conn.prepareStatement(sql);
+			prepStmnt.setInt(1, id);
+            try {
+                ResultSet rs = prepStmnt.executeQuery();
+                try {                  
+                    while (rs.next()) {
+			            mapDokumentTableDataToObject(list, rs);
+                    }
+                } finally {
+                    rs.close();
+
+                }
+            } finally {
+                prepStmnt.close();
+
+            }
+        } finally {
+            conn.close();
+        }
+
+        return list;
+  }
+
+
+public List<${dbObjectName}> get${dbObjectName}s() throws Exception {
+
+		String sql = "SELECT * FROM ${dbSchema}.${dbTable} fetch first 100 rows only";
+		return getData${dbObjectName}sSql(sql);
+		return rezultat;
+}
+
+
+private List<${dbObjectName}> getData${dbObjectName}sSql(String sql) throws SQLException{
+
+        List<${dbObjectName}> list = new ArrayList<${dbObjectName}>();
+        
+        Connection conn = dataSource.getConnection(null, null);
+        try {
+            Statement stmt = conn.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery(sql);
+                try {                  
+                    while (rs.next()) {
+                        mapDokumentTableDataToObject(list, rs);
+                    }
+                } finally {
+                    rs.close();
+
+                }
+            } finally {
+                stmt.close();
+
+            }
+        } finally {
+            conn.close();
+        }
+
+        return list;
+ }
+
+
+private void mapDokumentTableDataToObject(List<${dbObjectName}> list, ResultSet rs) throws SQLException {
+                        ${dbObjectName} obj = new ${dbObjectName}();
+#foreach( $entry in $tableData )
+                        obj.set${entry.ImeFirstCap}(rs.${entry.jdbcGetTip}("${entry.dbImePolja}"));
+#end
+                        list.add(obj);
+	}
+
+
+public ${dbObjectName} insert${dbObjectName}(${dbObjectName}  rec, ) throws Exception {
+
+    StringBuilder sb = new StringBuilder();
+	sb.append("Insert into ${dbSchema}.${dbTable} "); 
+	sb.append("(#foreach( $entry in $tableDataUpdate ) ${entry.dbImePolja} #if( $foreach.hasNext ),#end #end)"); 
+	sb.append("VALUES"); 
+	sb.append("(#foreach( $entry in $tableDataUpdate ) ? #if( $foreach.hasNext ),#end#end)"); 
+	insertInto${dbObjectName}(rec, sb.toString());
+	return rec;
+}
+
+private void insertInto${dbObjectName}(${dbObjectName} rec, String updateString) throws SQLException{
+	//Insert
+
+	Connection conn = dataSource.getConnection(null, null);
+        try {
+      	    //getting sequence
+	    Statement stm = conn.createStatement();
+            try {	    
+            ResultSet rs = stm.executeQuery("SELECT next value for ${dbSchema}.${dbTable}_SEQ FROM SYSIBM.SYSDUMMY1");
+                try {
+                    if (rs.next())
+                    {
+                    Integer id${dbTableSmall}Seq = rs.getInt(1);
+                    log.debug("Got sequence number ID_${dbTableSmall}: " + id${dbTableSmall}Seq);
+                    rec.setId${dbTableSmall}(id${dbTableSmall}Seq);
+                    }
+                } finally {
+                    rs.close();
+                }
+            } finally {
+                    stm.close();
+            }    
+            //update
+            PreparedStatement prepst = conn.prepareStatement(updateString);
+            try {
+#foreach( $entry in $tableDataUpdate )
+                prepst.${entry.jdbcSetTip}($foreach.count, ${entry.StatementUpdate});
+#end
+          
+                prepst.executeUpdate();
+            } finally {
+                prepst.close();
+            }
+        } finally {
+            conn.close();
+        }
+}
+
+
+public ${dbObjectName} update${dbObjectName}(${dbObjectName} rec) throws Exception {
+		StringBuilder sb = new StringBuilder();
+                sb.append("UPDATE ${dbSchema}.${dbTable} SET");
+                sb.append("#foreach( $entry in $tableDataUpdateReverse ) ${entry.dbImePolja} = ? #if( $foreach.hasNext ), #end#end ");
+                sb.append("WHERE ID_${dbTable} = ? ");
+ 		update${dbObjectName}Sql(rec, sb.toString());
+		return rec;
+	}
+
+private void update${dbObjectName}Sql(${dbObjectName} rec, String update) throws SQLException {
+		Connection conn = dataSource.getConnection(null, null);
+		try {
+			PreparedStatement prepStmnt = conn.prepareStatement(update);
+			try {
+#foreach( $entry in $tableDataUpdateReverse )
+                        prepStmnt.${entry.jdbcSetTip}($foreach.count, ${entry.StatementUpdate});
+#end
+                        prepStmnt.executeUpdate();
+			} finally {
+                        prepStmnt.close();
+			}
+		} finally {
+			conn.close();
+		}
+		
+	}
+
+}
+
